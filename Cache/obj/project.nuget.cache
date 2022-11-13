@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "W1Rq906jq4Cp8vTpaLTB55T14/KSz+NH5dM/uJ26GmIfH3YeakWj+Tyxc2DaoPqQdDQZkwjaW9H4DvkgaQQboA==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\janja\\RiderProjects\\Cache\\Cache\\Cache.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\janja\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\7.0.0\\microsoft.extensions.dependencyinjection.abstractions.7.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

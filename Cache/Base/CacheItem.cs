@@ -6,8 +6,8 @@ namespace Cache.Base;
 
 public sealed class CacheItem : IAsyncDisposable
 {
-    private const int SINGLE_TASK_ALLOWED = 1;
-    private readonly SemaphoreSlim _access = new(SINGLE_TASK_ALLOWED);
+    private const int SINGLE_TASK_ACCESS = 1;
+    private readonly SemaphoreSlim _access = new(SINGLE_TASK_ACCESS);
     private readonly ICache.Request _request;
     private readonly CancellationTokenSource _tokenSource;
     private readonly Timer? _refresh;

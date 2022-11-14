@@ -5,9 +5,9 @@ namespace Cache;
 
 public class ApplicationCache : IApplicationCache, IAsyncDisposable
 {
-    private const int SINGLE_TASK_ALLOWED = 1;
+    private const int SINGLE_TASK_ACCESS = 1;
     private readonly Dictionary<string, CacheItem> _cachedItems = new();
-    private readonly SemaphoreSlim _access = new(SINGLE_TASK_ALLOWED);
+    private readonly SemaphoreSlim _access = new(SINGLE_TASK_ACCESS);
 
     public Task<T?> GetOrAddValueByKeyAsync<T>(ICache.Request request, CancellationToken cancellationToken = default) where T : class
     {

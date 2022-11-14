@@ -4,8 +4,8 @@
     {
         Task<T?> GetOrAddValueByKeyAsync<T>(Request request, CancellationToken cancellationToken = default) where T : class;
         Task<T?> GetValueByKeyAsync<T>(string key, CancellationToken cancellationToken = default) where T : class;
-        Task<ICollection<string>> GetKeys(CancellationToken cancellationToken = default);
-        Task<bool> Remove(string key, CancellationToken cancellationToken = default);
+        Task<ICollection<string>> GetKeysAsync(CancellationToken cancellationToken = default);
+        Task<bool> RemoveAsync(string key, CancellationToken cancellationToken = default);
 
         public class Request
         {

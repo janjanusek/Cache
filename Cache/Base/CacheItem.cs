@@ -1,12 +1,13 @@
 using System.Timers;
+using Cache.Extensions;
 using Timer = System.Timers.Timer;
 
 namespace Cache.Base;
 
 public sealed class CacheItem : IAsyncDisposable
 {
-    private const int CONCURRENT_TASKS = 1;
-    private readonly SemaphoreSlim _access = new(CONCURRENT_TASKS);
+    private const int SINGLE_TASK_ALLOWED = 1;
+    private readonly SemaphoreSlim _access = new(SINGLE_TASK_ALLOWED);
     private readonly ICache.Request _request;
     private readonly CancellationTokenSource _tokenSource;
     private readonly Timer? _refresh;
@@ -34,9 +35,8 @@ public sealed class CacheItem : IAsyncDisposable
     public async Task<T?> GetOrFetchData<T>(CancellationToken cancellationToken = default) where T : class?
     {
         bool IsExpired() => _timestamp.Add(_request.Lifetime) <= DateTime.UtcNow;
-        try
+        var data = await _access.WaitAndReleaseAsync(async () =>
         {
-            await _access.WaitAsync(cancellationToken);
             if (IsExpired())
             {
                 await TryDisposeAsync();
@@ -45,12 +45,9 @@ public sealed class CacheItem : IAsyncDisposable
             }
 
             return _localValue as T;
-        }
-        finally
-        {
-            _access.Release();
-            TryStartRefresh();
-        }
+        }, cancellationToken);
+        TryStartRefresh();
+        return data;
     }
 
     public async ValueTask DisposeAsync() => await TryDisposeAsync();

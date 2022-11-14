@@ -1,71 +1,47 @@
 using Cache.Base;
+using Cache.Extensions;
 
 namespace Cache;
 
 public class ApplicationCache : IApplicationCache, IAsyncDisposable
 {
-    private const int CONCURRENT_TASKS = 1;
+    private const int SINGLE_TASK_ALLOWED = 1;
     private readonly Dictionary<string, CacheItem> _cachedItems = new();
-    private readonly SemaphoreSlim _access = new(CONCURRENT_TASKS);
+    private readonly SemaphoreSlim _access = new(SINGLE_TASK_ALLOWED);
 
-    public async Task<T?> GetOrAddValueByKeyAsync<T>(ICache.Request request, CancellationToken cancellationToken = default) where T : class
+    public Task<T?> GetOrAddValueByKeyAsync<T>(ICache.Request request, CancellationToken cancellationToken = default) where T : class
     {
-        try
+        return _access.WaitAndReleaseAsync(async () =>
         {
-            await _access.WaitAsync(cancellationToken);
-
             if (_cachedItems.TryGetValue(request.Key, out var cValue) == false)
                 _cachedItems.Add(request.Key, cValue = new CacheItem(request));
-
             return await cValue.GetOrFetchData<T?>(cancellationToken);
-        }
-        finally
-        {
-            _access.Release();
-        }
+        }, cancellationToken);
     }
 
-    public async Task<T?> GetValueByKeyAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
+    public Task<T?> GetValueByKeyAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
     {
-        try
+        return _access.WaitAndReleaseAsync(() =>
         {
-            await _access.WaitAsync(cancellationToken);
             _cachedItems.TryGetValue(key, out var value);
-            return value as T;
-        }
-        finally
-        {
-            _access.Release();
-        }
+            return Task.FromResult(value as T);
+        }, cancellationToken);
     }
 
-    public async Task<bool> Remove(string key, CancellationToken cancellationToken = default)
+    public Task<bool> RemoveAsync(string key, CancellationToken cancellationToken = default)
     {
-        try
+        return _access.WaitAndReleaseAsync(async () =>
         {
-            await _access.WaitAsync(cancellationToken);
             var removed = _cachedItems.TryGetValue(key, out var value);
             if (removed)
                 await value!.DisposeAsync();
             return removed;
-        }
-        finally
-        {
-            _access.Release();
-        }
+        }, cancellationToken);
     }
 
-    public async Task<ICollection<string>> GetKeys(CancellationToken cancellationToken = default)
+    public Task<ICollection<string>> GetKeysAsync(CancellationToken cancellationToken = default)
     {
-        try
-        {
-            await _access.WaitAsync(cancellationToken);
-            return _cachedItems.Keys.ToList();
-        }
-        finally
-        {
-            _access.Release();
-        }
+        return _access.WaitAndReleaseAsync(() => Task.FromResult((ICollection<string>)_cachedItems.Keys.ToList()), cancellationToken);
     }
 
     public async ValueTask DisposeAsync() => await Task.WhenAll(_cachedItems.Select(i => i.Value.DisposeAsync().AsTask()));

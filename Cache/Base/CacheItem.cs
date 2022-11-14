@@ -83,6 +83,7 @@ public sealed class CacheItem : IAsyncDisposable
     {
         if (_refresh is { Enabled: false })
         {
+            _refreshCounter = 0;
             _refresh.Start();
         }
     }

@@ -15,7 +15,7 @@ public class ApplicationCache : IApplicationCache, IAsyncDisposable
             await _access.WaitAsync(cancellationToken);
 
             if (_cachedItems.TryGetValue(request.Key, out var cValue) == false)
-                _cachedItems.TryAdd(request.Key, cValue = new CacheItem(request));
+                _cachedItems.Add(request.Key, cValue = new CacheItem(request));
 
             return await cValue.GetOrFetchData<T?>(cancellationToken);
         }
